@@ -46,25 +46,46 @@ if (isset($_POST['register'])) {
 </head>
 <body style="flex-direction:column;">
 
+    
+
     <div class="card" style="width: 300px; text-align: center;">
-        <h2>Create Account 📝</h2>
+        <h2>₱ennyWise </h2>
+        
         
         <?php if($error): ?>
             <p style="color:red; background:#ffe6e6; padding:5px; border-radius:4px;"><?php echo $error; ?></p>
         <?php endif; ?>
 
-        <form method="POST">
-            <input type="text" name="username" placeholder="Choose a Username" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-            
-            <button type="submit" name="register" style="background-color: #6f42c1;">Register</button>
-        </form>
+        <div class="container">
+            <div class="content">
+                <div class="text1">
+                    <h3>Welcome to<h3>
+                    <h2>₱ennyWise </h2>
 
-        <p style="margin-top: 15px;">
-            Already have an account? <br>
-            <a href="login.php" style="color: #28a745; text-decoration: none; font-weight: bold;">Login here</a>
-        </p>
+                    <p>Tagline Here</p>
+                
+                </div>
+        </div>
+
+        <div class="logreg-box">
+            <div class="form-box" id="register">
+                 <form method="POST">
+                    <h3>Create Account</h3>
+                    <input type="text" name="username" placeholder="Choose a Username" required>
+                    <input type="password" name="password" placeholder="Password" required>
+                    <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+                        
+                    <button type="submit" name="register">Register</button>
+                </form>
+
+                <p style="margin-top: 18px;">
+                    Already have an account? <br>
+                    <a href="login.php" style="color: #28a745; font-weight: bold;">Login here</a>
+                </p>
+            </div>
+        </div>
+
+     
     </div>
 
 </body>

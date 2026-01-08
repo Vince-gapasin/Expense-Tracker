@@ -42,15 +42,16 @@ if (isset($_POST['login'])) {
 }
 ?>
 
+
 <!DOCTYPE html>
 <html>
 <head>
     <link rel="stylesheet" href="style.css">
     <title>Login - PennyWise</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body style="flex-direction:column;">
     <div class="card" style="width: 300px; text-align: center;">
-        <h2>PennyWise Login</h2>
         
         <?php if(isset($success_msg)): ?>
             <p style='color:#155724; background:#d4edda; padding:8px; border-radius:4px;'>
@@ -64,18 +65,38 @@ if (isset($_POST['login'])) {
             </p>
         <?php endif; ?>
 
-        <form method="POST">
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit" name="login">Login</button>
-        </form>
+        <div class="container"> 
+            <div class="content">
+                <div class="text1">
+                    <h3>Welcome to<h3>
+                    <h2>₱ennyWise </h2>
 
-        <p style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
-            New here? <br>
-            <a href="register.php" style="color: #6f42c1; text-decoration: none; font-weight: bold;">Create an Account</a>
-        </p>
+                    <p>Tagline Here</p>
+                
+                </div>
+            </div>
+            
+            <div class="logreg-box">
+                <div class="form-box" id="login">
+                     <form method="POST">
+                        <h3>LOGIN</h3>
+                            <input type="text" name="username" placeholder="Username" required>
+                            <input type="password" name="password" placeholder="Password" required>
+                            <button type="submit" name="login">Login</button>
+                     </form>
 
-        <p><small style="color:#aaa;">Use <b>admin</b> / <b>password</b></small></p>
+                <p style="margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px;">
+                    New here? <br>
+                    <a href="register.php" style="color: #6f42c1;  font-weight: bold;">Create an Account</a>
+                </p>
+                </div>
+            </div>
+        </div>
+
+
+     
+
     </div>
+
 </body>
 </html>

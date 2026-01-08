@@ -23,6 +23,7 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     $id = $_GET['id'];
     $action = $_GET['action'];
     
+    // Safety: Cannot change your own role
     if ($id == $_SESSION['user_id']) {
         echo "<script>alert('You cannot change your own role!'); window.location='admin.php';</script>";
     } else {
@@ -36,19 +37,13 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     }
 }
 
-// --- LOGIC C: BACKUP (FIXED) ---
+// --- LOGIC C: BACKUP & RESTORE ---
 if (isset($_POST['backup'])) {
     $tables = ['categories', 'expenses', 'users']; 
     $sqlScript = "";
     foreach ($tables as $table) {
-        // --- THE FIX: Add DROP TABLE command ---
-        $sqlScript .= "DROP TABLE IF EXISTS $table;\n";
-
-        // Get Create Table Structure
         $row = $conn->query("SHOW CREATE TABLE $table")->fetch_row();
-        $sqlScript .= "\n" . $row[1] . ";\n\n";
-        
-        // Get Data
+        $sqlScript .= "\n\n" . $row[1] . ";\n\n";
         $result = $conn->query("SELECT * FROM $table");
         while ($row = $result->fetch_row()) {
             $sqlScript .= "INSERT INTO $table VALUES(";
@@ -67,25 +62,14 @@ if (isset($_POST['backup'])) {
     exit;
 }
 
-// --- LOGIC D: RESTORE ---
 if (isset($_POST['restore'])) {
     if ($_FILES['sql_file']['tmp_name']) {
         $sql = file_get_contents($_FILES['sql_file']['tmp_name']);
-        
-        // Disable checks so we can overwrite tables freely
         $conn->query("SET FOREIGN_KEY_CHECKS = 0");
-        
         if ($conn->multi_query($sql)) {
-            do { 
-                if ($result = $conn->store_result()) { 
-                    $result->free(); 
-                } 
-            } while ($conn->more_results() && $conn->next_result());
+            do { if ($result = $conn->store_result()) { $result->free(); } } while ($conn->more_results() && $conn->next_result());
             $msg = "Database Restored Successfully!";
-        } else {
-            $msg = "Error restoring: " . $conn->error;
         }
-        
         $conn->query("SET FOREIGN_KEY_CHECKS = 1");
     }
 }
@@ -97,7 +81,20 @@ if (isset($_POST['restore'])) {
     <meta charset="UTF-8">
     <title>Admin Panel</title>
     <link rel="stylesheet" href="style.css">
-    
+    <style>
+        .user-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .user-table th { background-color: #343a40; color: white; padding: 10px; text-align: left; }
+        .user-table td { padding: 10px; border-bottom: 1px solid #ddd; vertical-align: middle; }
+        
+        .role-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .role-admin { background-color: #17a2b8; color: white; }
+        .role-user { background-color: #6c757d; color: white; }
+        
+        /* Button Styles */
+        .btn-promote { background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; }
+        .btn-demote { background-color: #ffc107; color: black; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; }
+        .alert { padding: 10px; background-color: #d4edda; color: #155724; border-radius: 4px; margin-bottom: 15px; }
+    </style>
 </head>
 <body>
 
@@ -133,13 +130,19 @@ if (isset($_POST['restore'])) {
                         echo "<tr>";
                         echo "<td><b>{$row['username']}</b></td>";
                         echo "<td><span class='role-badge $roleClass'>" . strtoupper($row['role']) . "</span></td>";
+                        
                         echo "<td>";
                         if (!$is_me) {
+                            // SHOW BUTTONS BASED ON ROLE
                             if ($row['role'] == 'user') {
+                                // Show PROMOTE button
                                 echo "<a href='admin.php?id={$row['id']}&action=promote' class='btn-promote'>Make Admin ⬆️</a> ";
                             } else {
+                                // Show DEMOTE button
                                 echo "<a href='admin.php?id={$row['id']}&action=demote' class='btn-demote'>Demote ⬇️</a> ";
                             }
+                            
+                            // Delete Button
                             echo "<a href='admin.php?delete_user={$row['id']}' class='sm-btn delete' onclick='return confirm(\"Delete this user?\")'>X</a>";
                         } else {
                             echo "<span style='color:#ccc; font-size:12px;'> (You) </span>";
@@ -162,10 +165,11 @@ if (isset($_POST['restore'])) {
             
             <form method="POST" enctype="multipart/form-data" style="width:48%; display:flex; gap:5px;">
                 <input type="file" name="sql_file" required style="width: 60%; font-size:11px;">
-                <button type="submit" name="restore" style="background:#dc3545; width:40%;" onclick="return confirm('WARNING: This will overwrite your current data.')">Restore</button>
+                <button type="submit" name="restore" style="background:#dc3545; width:40%;">Restore</button>
             </form>
         </div>
     </div>
+
 </div>
 
 </body>
