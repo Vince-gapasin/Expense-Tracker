@@ -1,17 +1,36 @@
-<?php include 'db.php'; ?>
+<?php 
+session_start();
+include 'db.php'; 
+
+// Force Login
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
+?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>PennyWise 2.0</title>
+    <title>PennyWise</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container">
-    <h1>PennyWise 2.0 💸</h1>
-
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom: 2px solid #ddd; padding-bottom: 10px;">
+        <h2 style="margin:0;">PennyWise 💸</h2>
+        
+        <div style="display:flex; gap: 5px;">
+            <?php if(isset($_SESSION['role']) && trim($_SESSION['role']) === 'admin'): ?>
+                <a href="admin.php" class="sm-btn edit" style="background-color: #17a2b8;">Admin Panel</a>
+            <?php endif; ?>
+            
+            <a href="login.php" class="sm-btn delete">Logout</a>
+        </div>
+    </div>
     <div class="card">
         <h3 id="form-title">Add New Expense</h3>
         <form action="process.php" method="POST">
