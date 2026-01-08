@@ -41,14 +41,9 @@ if (isset($_POST['backup'])) {
     $tables = ['categories', 'expenses', 'users']; 
     $sqlScript = "";
     foreach ($tables as $table) {
-        // --- THE FIX: Add DROP TABLE command ---
         $sqlScript .= "DROP TABLE IF EXISTS $table;\n";
-
-        // Get Create Table Structure
         $row = $conn->query("SHOW CREATE TABLE $table")->fetch_row();
         $sqlScript .= "\n" . $row[1] . ";\n\n";
-        
-        // Get Data
         $result = $conn->query("SELECT * FROM $table");
         while ($row = $result->fetch_row()) {
             $sqlScript .= "INSERT INTO $table VALUES(";
@@ -71,21 +66,13 @@ if (isset($_POST['backup'])) {
 if (isset($_POST['restore'])) {
     if ($_FILES['sql_file']['tmp_name']) {
         $sql = file_get_contents($_FILES['sql_file']['tmp_name']);
-        
-        // Disable checks so we can overwrite tables freely
         $conn->query("SET FOREIGN_KEY_CHECKS = 0");
-        
         if ($conn->multi_query($sql)) {
-            do { 
-                if ($result = $conn->store_result()) { 
-                    $result->free(); 
-                } 
-            } while ($conn->more_results() && $conn->next_result());
+            do { if ($result = $conn->store_result()) { $result->free(); } } while ($conn->more_results() && $conn->next_result());
             $msg = "Database Restored Successfully!";
         } else {
             $msg = "Error restoring: " . $conn->error;
         }
-        
         $conn->query("SET FOREIGN_KEY_CHECKS = 1");
     }
 }
@@ -136,11 +123,18 @@ if (isset($_POST['restore'])) {
                         echo "<td>";
                         if (!$is_me) {
                             if ($row['role'] == 'user') {
-                                echo "<a href='admin.php?id={$row['id']}&action=promote' class='btn-promote'>Make Admin ⬆️</a> ";
+                                // UPGRADE: Added confirmation for Promoting
+                                echo "<a href='admin.php?id={$row['id']}&action=promote' 
+                                         class='btn-promote'
+                                         onclick='return confirm(\"⚠️ Are you sure you want to promote this user to ADMIN? They will have full system access.\")'>Make Admin ⬆️</a> ";
                             } else {
-                                echo "<a href='admin.php?id={$row['id']}&action=demote' class='btn-demote'>Demote ⬇️</a> ";
+                                // UPGRADE: Added confirmation for Demoting
+                                echo "<a href='admin.php?id={$row['id']}&action=demote' 
+                                         class='btn-demote'
+                                         onclick='return confirm(\"⚠️ Are you sure you want to demote this Admin to a standard User?\")'>Demote ⬇️</a> ";
                             }
-                            echo "<a href='admin.php?delete_user={$row['id']}' class='sm-btn delete' onclick='return confirm(\"Delete this user?\")'>X</a>";
+                            // Delete Confirmation (Already existed, but good to double check)
+                            echo "<a href='admin.php?delete_user={$row['id']}' class='sm-btn delete' onclick='return confirm(\"❌ Are you sure you want to DELETE this user permanently?\")'>X</a>";
                         } else {
                             echo "<span style='color:#ccc; font-size:12px;'> (You) </span>";
                         }
@@ -162,7 +156,7 @@ if (isset($_POST['restore'])) {
             
             <form method="POST" enctype="multipart/form-data" style="width:48%; display:flex; gap:5px;">
                 <input type="file" name="sql_file" required style="width: 60%; font-size:11px;">
-                <button type="submit" name="restore" style="background:#dc3545; width:40%;" onclick="return confirm('WARNING: This will overwrite your current data.')">Restore</button>
+                <button type="submit" name="restore" style="background:#dc3545; width:40%;" onclick="return confirm('🧨 SUPER WARNING: This will wipe ALL current data and replace it with the backup file. Are you absolutely sure?')">Restore</button>
             </form>
         </div>
     </div>

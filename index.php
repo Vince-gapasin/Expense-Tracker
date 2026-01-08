@@ -28,9 +28,10 @@ if (!isset($_SESSION['user_id'])) {
                 <a href="admin.php" class="sm-btn edit" style="background-color: #17a2b8;">Admin Panel</a>
             <?php endif; ?>
             
-            <a href="login.php" class="sm-btn delete">Logout</a>
+            <a href="login.php" class="sm-btn delete" onclick="return confirm('Are you sure you want to log out?');">Logout</a>
         </div>
     </div>
+
     <div class="card">
         <h3 id="form-title">Add New Expense</h3>
         <form action="process.php" method="POST">
@@ -70,7 +71,8 @@ if (!isset($_SESSION['user_id'])) {
                 // Flush connection to prevent "Commands out of sync" error
                 while($conn->more_results()){ $conn->next_result(); } 
 
-                $result = $conn->query("CALL sp_get_all_expenses()");
+                $uid = $_SESSION['user_id'];
+                $result = $conn->query("CALL sp_get_all_expenses($uid)");
                 if($result) {
                     while($row = $result->fetch_assoc()){
                         echo "<tr>";
@@ -79,7 +81,9 @@ if (!isset($_SESSION['user_id'])) {
                         echo "<td>$" . number_format($row['amount'], 2) . "</td>";
                         echo "<td>
                                 <button class='sm-btn edit' onclick='editExpense({$row['id']}, \"{$row['description']}\", {$row['amount']}, {$row['category_id']})'>Edit</button>
-                                <a href='process.php?delete={$row['id']}' class='sm-btn delete' onclick='return confirm(\"Are you sure?\")'>X</a>
+                                <a href='process.php?delete={$row['id']}' 
+                                class='sm-btn delete' 
+                                onclick='return confirm(\"Are you sure you want to delete this expense transaction?\")'>X</a>
                               </td>";
                         echo "</tr>";
                     }
@@ -95,7 +99,8 @@ if (!isset($_SESSION['user_id'])) {
             <?php
             // Re-connect or flush needed because SPs return multiple result sets
             include 'db.php'; 
-            $summary = $conn->query("CALL sp_get_summary()");
+            $uid = $_SESSION['user_id'];
+            $summary = $conn->query("CALL sp_get_summary($uid)");
             while($row = $summary->fetch_assoc()){
                 echo "<div class='stat-box'><strong>{$row['name']}</strong><br>$" . number_format($row['total'], 2) . "</div>";
             }
