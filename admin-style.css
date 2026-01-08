@@ -1,0 +1,145 @@
+/* Admin Panel - Modern Pastel Blue Theme */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #e3f2fd;
+    display: flex;
+    justify-content: center;
+    padding: 30px;
+}
+
+.container {
+    max-width: 900px;
+    width: 100%;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.admin-header h1 {
+    color: #0d6efd;
+    font-size: 28px;
+}
+
+.card {
+    background-color: #ffffff;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+    margin-bottom: 25px;
+}
+
+h2 {
+    color: #0d47a1;
+    margin-bottom: 15px;
+}
+
+.table-wrapper {
+    max-height: 350px;
+    overflow-y: auto;
+    border-radius: 12px;
+    border: 1px solid #90caf9;
+}
+
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.user-table th {
+    background-color: #90caf9;
+    color: #0d47a1;
+    padding: 10px;
+    text-align: left;
+    position: sticky;
+    top: 0;
+}
+
+.user-table td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    vertical-align: middle;
+}
+
+.role-badge {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.role-admin { background-color: #64b5f6; color: #0d47a1; }
+.role-user { background-color: #bbdefb; color: #0d47a1; }
+
+.btn-promote, .btn-demote, .sm-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-promote { background-color: #81c784; color: white; }
+.btn-promote:hover { background-color: #66bb6a; }
+
+.btn-demote { background-color: #ffb74d; color: white; }
+.btn-demote:hover { background-color: #ffa726; }
+
+.sm-btn.edit { background-color: #64b5f6; color: white; }
+.sm-btn.edit:hover { background-color: #42a5f5; }
+
+.sm-btn.delete { background-color: #e57373; color: white; }
+.sm-btn.delete:hover { background-color: #ef5350; }
+
+.alert {
+    padding: 12px;
+    background-color: #c8e6c9;
+    color: #2e7d32;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.db-tools {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.db-tools form {
+    width: 48%;
+    display: flex;
+    gap: 5px;
+}
+
+.db-tools form button {
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    color: white;
+}
+
+.db-tools form button[name="backup"] { background-color: #64b5f6; }
+.db-tools form button[name="backup"]:hover { background-color: #42a5f5; }
+
+.db-tools form button[name="restore"] { background-color: #f06292; }
+.db-tools form button[name="restore"]:hover { background-color: #ec407a; }
+
+input[type="file"] {
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid #90caf9;
+    width: 60%;
+}
+
+.self-user {
+    color: #999;
+    font-size: 12px;
+}
