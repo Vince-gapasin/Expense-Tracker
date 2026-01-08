@@ -2,22 +2,48 @@
 session_start();
 include 'db.php';
 
-// Access Control: Only Admins Allowed
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+// 1. ACCESS CONTROL
+if (!isset($_SESSION['role']) || trim($_SESSION['role']) !== 'admin') {
     die("ACCESS DENIED: You do not have permission to view this page.");
 }
 
-// --- LOGIC: BACKUP ---
-if (isset($_POST['backup'])) {
-    $tables = ['categories', 'expenses', 'users']; // Tables to backup
-    $sqlScript = "";
+// --- LOGIC A: DELETE USER ---
+if (isset($_GET['delete_user'])) {
+    $id = $_GET['delete_user'];
+    if ($id == $_SESSION['user_id']) {
+        echo "<script>alert('You cannot delete your own account!'); window.location='admin.php';</script>";
+    } else {
+        $conn->query("CALL sp_delete_user($id)");
+        $msg = "User deleted.";
+    }
+}
+
+// --- LOGIC B: PROMOTE / DEMOTE ---
+if (isset($_GET['action']) && isset($_GET['id'])) {
+    $id = $_GET['id'];
+    $action = $_GET['action'];
     
+    // Safety: Cannot change your own role
+    if ($id == $_SESSION['user_id']) {
+        echo "<script>alert('You cannot change your own role!'); window.location='admin.php';</script>";
+    } else {
+        if ($action == 'promote') {
+            $conn->query("CALL sp_update_user_role($id, 'admin')");
+            $msg = "User promoted to Admin!";
+        } elseif ($action == 'demote') {
+            $conn->query("CALL sp_update_user_role($id, 'user')");
+            $msg = "User demoted to Standard User.";
+        }
+    }
+}
+
+// --- LOGIC C: BACKUP & RESTORE ---
+if (isset($_POST['backup'])) {
+    $tables = ['categories', 'expenses', 'users']; 
+    $sqlScript = "";
     foreach ($tables as $table) {
-        // Get Create Table Structure
         $row = $conn->query("SHOW CREATE TABLE $table")->fetch_row();
         $sqlScript .= "\n\n" . $row[1] . ";\n\n";
-        
-        // Get Data
         $result = $conn->query("SELECT * FROM $table");
         while ($row = $result->fetch_row()) {
             $sqlScript .= "INSERT INTO $table VALUES(";
@@ -30,64 +56,121 @@ if (isset($_POST['backup'])) {
             $sqlScript .= ");\n";
         }
     }
-
-    // Force Download
     header('Content-Type: application/octet-stream');
-    header('Content-Disposition: attachment; filename=db_backup_' . date('Y-m-d') . '.sql');
+    header('Content-Disposition: attachment; filename=pennywise_backup.sql');
     echo $sqlScript;
     exit;
 }
 
-// --- LOGIC: RESTORE ---
 if (isset($_POST['restore'])) {
     if ($_FILES['sql_file']['tmp_name']) {
         $sql = file_get_contents($_FILES['sql_file']['tmp_name']);
-        
-        // Disable Foreign Key Checks temporarily to prevent errors during drop/insert
         $conn->query("SET FOREIGN_KEY_CHECKS = 0");
-        
-        // Execute multiple queries
-        $conn->multi_query($sql);
-        
-        // Clear results to prevent sync errors
-        while ($conn->next_result()) {;}
-        
+        if ($conn->multi_query($sql)) {
+            do { if ($result = $conn->store_result()) { $result->free(); } } while ($conn->more_results() && $conn->next_result());
+            $msg = "Database Restored Successfully!";
+        }
         $conn->query("SET FOREIGN_KEY_CHECKS = 1");
-        $msg = "Database Restored Successfully!";
     }
 }
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
     <title>Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .user-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .user-table th { background-color: #343a40; color: white; padding: 10px; text-align: left; }
+        .user-table td { padding: 10px; border-bottom: 1px solid #ddd; vertical-align: middle; }
+        
+        .role-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .role-admin { background-color: #17a2b8; color: white; }
+        .role-user { background-color: #6c757d; color: white; }
+        
+        /* Button Styles */
+        .btn-promote { background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; }
+        .btn-demote { background-color: #ffc107; color: black; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; }
+        .alert { padding: 10px; background-color: #d4edda; color: #155724; border-radius: 4px; margin-bottom: 15px; }
+    </style>
 </head>
 <body>
-<div class="container">
-    <div class="card">
-        <h1>Admin Panel 🛡️</h1>
-        <p>Welcome, <b><?php echo $_SESSION['username']; ?></b></p>
-        <a href="index.php" class="sm-btn edit">Back to Dashboard</a>
-        <hr>
-        
-        <?php if(isset($msg)) echo "<p style='color:green; font-weight:bold;'>$msg</p>"; ?>
 
-        <h3>Database Backup</h3>
-        <p>Download a copy of your current data.</p>
-        <form method="POST">
-            <button type="submit" name="backup" style="background:#17a2b8;">Download .SQL Backup</button>
-        </form>
-        <br>
-
-        <h3>Database Restore</h3>
-        <p style="color:red; font-size: 12px;">Warning: This will overwrite current data.</p>
-        <form method="POST" enctype="multipart/form-data">
-            <input type="file" name="sql_file" required>
-            <button type="submit" name="restore" style="background:#dc3545;" onclick="return confirm('Are you sure? This will wipe current data!')">Restore Database</button>
-        </form>
+<div class="container" style="max-width: 700px;">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2>Admin Panel 🛡️</h2>
+        <a href="index.php" class="sm-btn edit">Back to Expenses</a>
     </div>
+
+    <?php if(isset($msg)) echo "<div class='alert'>$msg</div>"; ?>
+
+    <div class="card">
+        <h3>User Management</h3>
+        <table class="user-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                while($conn->more_results()){ $conn->next_result(); }
+                $result = $conn->query("CALL sp_get_all_users()");
+                
+                if ($result) {
+                    while ($row = $result->fetch_assoc()) {
+                        $is_me = ($row['id'] == $_SESSION['user_id']);
+                        $roleClass = ($row['role'] == 'admin') ? 'role-admin' : 'role-user';
+                        
+                        echo "<tr>";
+                        echo "<td><b>{$row['username']}</b></td>";
+                        echo "<td><span class='role-badge $roleClass'>" . strtoupper($row['role']) . "</span></td>";
+                        
+                        echo "<td>";
+                        if (!$is_me) {
+                            // SHOW BUTTONS BASED ON ROLE
+                            if ($row['role'] == 'user') {
+                                // Show PROMOTE button
+                                echo "<a href='admin.php?id={$row['id']}&action=promote' class='btn-promote'>Make Admin ⬆️</a> ";
+                            } else {
+                                // Show DEMOTE button
+                                echo "<a href='admin.php?id={$row['id']}&action=demote' class='btn-demote'>Demote ⬇️</a> ";
+                            }
+                            
+                            // Delete Button
+                            echo "<a href='admin.php?delete_user={$row['id']}' class='sm-btn delete' onclick='return confirm(\"Delete this user?\")'>X</a>";
+                        } else {
+                            echo "<span style='color:#ccc; font-size:12px;'> (You) </span>";
+                        }
+                        echo "</td>";
+                        echo "</tr>";
+                    }
+                }
+                ?>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <h3>Database Tools</h3>
+        <div style="display:flex; gap:10px; justify-content: space-between;">
+            <form method="POST" style="width:48%;">
+                <button type="submit" name="backup" style="background:#6f42c1;">Download Backup</button>
+            </form>
+            
+            <form method="POST" enctype="multipart/form-data" style="width:48%; display:flex; gap:5px;">
+                <input type="file" name="sql_file" required style="width: 60%; font-size:11px;">
+                <button type="submit" name="restore" style="background:#dc3545; width:40%;">Restore</button>
+            </form>
+        </div>
+    </div>
+
 </div>
+
 </body>
 </html>

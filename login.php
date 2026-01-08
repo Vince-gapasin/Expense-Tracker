@@ -1,9 +1,14 @@
 <?php
-ob_start(); // <--- 1. ADD THIS AT THE VERY TOP
+ob_start();
 session_start();
 include 'db.php';
 
-$error = ""; // Initialize variable
+$error = ""; 
+
+// Handle "Registration Successful" message
+if (isset($_GET['msg']) && $_GET['msg'] == 'registered') {
+    $success_msg = "Account created! Please login.";
+}
 
 if (isset($_POST['login'])) {
     $user = $_POST['username'];
@@ -19,13 +24,12 @@ if (isset($_POST['login'])) {
         // Verify Password Hash
         if (password_verify($pass, $row['password'])) {
             $_SESSION['user_id'] = $row['id'];
-            $_SESSION['role'] = $row['role']; 
+            $_SESSION['role'] = trim($row['role']); // Trim to ensure no whitespace issues
             $_SESSION['username'] = $row['username'];
             
-            // Clean buffer and Redirect
-            ob_end_clean(); // <--- 2. CLEAN BUFFER
+            ob_end_clean();
             header("Location: index.php");
-            exit(); // <--- 3. STOP SCRIPT
+            exit();
         } else {
             $error = "Incorrect Password";
         }
@@ -33,7 +37,6 @@ if (isset($_POST['login'])) {
         $error = "User not found";
     }
     
-    // Clear results to avoid sync issues if logic continues
     $stmt->close();
     while($conn->more_results()){ $conn->next_result(); }
 }
@@ -41,11 +44,20 @@ if (isset($_POST['login'])) {
 
 <!DOCTYPE html>
 <html>
-<head><link rel="stylesheet" href="style.css"></head>
+<head>
+    <link rel="stylesheet" href="style.css">
+    <title>Login - PennyWise</title>
+</head>
 <body style="flex-direction:column;">
     <div class="card" style="width: 300px; text-align: center;">
         <h2>PennyWise Login</h2>
         
+        <?php if(isset($success_msg)): ?>
+            <p style='color:#155724; background:#d4edda; padding:8px; border-radius:4px;'>
+                <?php echo $success_msg; ?>
+            </p>
+        <?php endif; ?>
+
         <?php if($error): ?>
             <p style='color:red; background:#ffe6e6; padding:5px; border-radius:4px;'>
                 <?php echo $error; ?>
@@ -57,7 +69,13 @@ if (isset($_POST['login'])) {
             <input type="password" name="password" placeholder="Password" required>
             <button type="submit" name="login">Login</button>
         </form>
-        <p><small>Use <b>admin</b> / <b>12345</b></small></p>
+
+        <p style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
+            New here? <br>
+            <a href="register.php" style="color: #6f42c1; text-decoration: none; font-weight: bold;">Create an Account</a>
+        </p>
+
+        <p><small style="color:#aaa;">Use <b>admin</b> / <b>password</b></small></p>
     </div>
 </body>
 </html>
