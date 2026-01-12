@@ -89,6 +89,7 @@ if (isset($_POST['restore'])) {
     <meta charset="UTF-8">
     <title>Admin Panel</title>
     <link rel="stylesheet" href="admin-style.css"> <!-- external CSS -->
+    <link rel="icon" type="image/png" href="wiselogo.png">
 </head>
 
 <body>

@@ -16,6 +16,7 @@ if (!isset($_SESSION['user_id'])) {
     <meta charset="UTF-8">
     <title>PennyWise</title>
     <link rel="stylesheet" href="index.css">
+    <link rel="icon" type="image/png" href="wiselogo.png">
 </head>
 
 <!-- Logout Modal -->
