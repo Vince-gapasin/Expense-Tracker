@@ -125,7 +125,7 @@ if (isset($_POST['login'])) {
             <form method="POST" style="width:100%;">
                 <input type="text" name="username" placeholder="Username" required
                     style="
-                    width:100%;
+                    width:90%;
                     padding:12px;
                     margin-bottom:14px;
                     border-radius:8px;
@@ -137,7 +137,7 @@ if (isset($_POST['login'])) {
 
                 <input type="password" name="password" placeholder="Password" required
                     style="
-                    width:100%;
+                    width:90%;
                     padding:12px;
                     margin-bottom:18px;
                     border-radius:8px;
